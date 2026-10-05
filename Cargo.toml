@@ -1,0 +1,14 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/upwork-mcp-core",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Liam Gray <liam@example.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/LiamDGray/upwork-mcp-rs"
+homepage = "https://github.com/LiamDGray/upwork-mcp-rs"
+description = "High-assurance Rust Model Context Protocol server for Upwork"
