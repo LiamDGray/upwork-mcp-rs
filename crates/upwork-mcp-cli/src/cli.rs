@@ -112,4 +112,10 @@ pub struct ConfigArgs {
 
     #[arg(long)]
     pub binary_path: Option<PathBuf>,
+
+    #[arg(
+        long,
+        help = "Directly install/merge configuration into the target agent config file"
+    )]
+    pub install: bool,
 }

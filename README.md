@@ -161,38 +161,122 @@ cargo build --release
 
 The compiled binary will be located at `target/release/upwork-mcp-rs`.
 
-### 2. Generate Client Configuration
+### 2. Configure Agent Clients & Automated Installation
 
-Automatically generate ready-to-use configuration files for your preferred MCP host:
+Automatically generate ready-to-use configuration files or directly install/merge configuration into your agent configuration files using the `--install` flag:
 
 ```bash
-# Generate Claude Desktop configuration
-upwork-mcp-rs config --client claude
+# Direct automatic configuration install / merge:
+upwork-mcp-rs config --client claude --install       # ~/.config/Claude/claude_desktop_config.json
+upwork-mcp-rs config --client cursor --install       # ~/.cursor/mcp.json
+upwork-mcp-rs config --client zed --install          # ~/.config/zed/settings.json
+upwork-mcp-rs config --client cline --install        # ~/.config/Code/User/globalStorage/.../cline_mcp_settings.json
+upwork-mcp-rs config --client codex --install        # ~/.codex/config.json
+upwork-mcp-rs config --client antigravity --install  # ~/.gemini/config/mcp_config.json
+upwork-mcp-rs config --client pi --install           # ~/.pi/agent/mcp.json
+upwork-mcp-rs config --client hermes --install       # ~/.hermes/mcp.json
 
-# Generate Cursor configuration
-upwork-mcp-rs config --client cursor
-
-# Generate Windsurf configuration
-upwork-mcp-rs config --client windsurf
-
-# Generate Generic stdio configuration
-upwork-mcp-rs config --client stdio
+# Or install for all 8 supported agent environments in one shot:
+upwork-mcp-rs config --all --install
 ```
 
-#### Example `claude_desktop_config.json`
+#### Supported Agent Environments & Snippets
 
+1. **Claude Desktop** (`~/.config/Claude/claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
-    "upwork-mcp": {
+    "upwork": {
+      "command": "/usr/local/bin/upwork-mcp-rs",
+      "args": ["serve", "--stdio"]
+    }
+  }
+}
+```
+
+2. **Cursor** (`~/.cursor/mcp.json`):
+```json
+{
+  "mcpServers": {
+    "upwork": {
+      "command": "/usr/local/bin/upwork-mcp-rs",
+      "args": ["serve", "--stdio"]
+    }
+  }
+}
+```
+
+3. **Zed** (`~/.config/zed/settings.json`):
+```json
+{
+  "context_servers": {
+    "upwork": {
+      "command": {
+        "path": "/usr/local/bin/upwork-mcp-rs",
+        "args": ["serve", "--stdio"]
+      }
+    }
+  }
+}
+```
+
+4. **Cline** (`~/.config/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`):
+```json
+{
+  "mcpServers": {
+    "upwork": {
       "command": "/usr/local/bin/upwork-mcp-rs",
       "args": ["serve", "--stdio"],
-      "env": {
-        "UPWORK_CLIENT_ID": "your_client_id",
-        "UPWORK_CLIENT_SECRET": "your_client_secret",
-        "UPWORK_SUPERVISOR_SECRET": "your_supervisor_hmac_key",
-        "RUST_LOG": "info"
-      }
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}
+```
+
+5. **Codex CLI** (`~/.codex/config.json`):
+```json
+{
+  "mcpServers": {
+    "upwork": {
+      "command": "/usr/local/bin/upwork-mcp-rs",
+      "args": ["serve", "--stdio"]
+    }
+  }
+}
+```
+
+6. **Antigravity CLI** (`~/.gemini/config/mcp_config.json`):
+```json
+{
+  "mcpServers": {
+    "upwork": {
+      "command": "/usr/local/bin/upwork-mcp-rs",
+      "args": ["serve", "--stdio"]
+    }
+  }
+}
+```
+
+7. **Pi Agent** (`~/.pi/agent/mcp.json`):
+```json
+{
+  "mcpServers": {
+    "upwork": {
+      "command": "/usr/local/bin/upwork-mcp-rs",
+      "args": ["serve", "--stdio"]
+    }
+  }
+}
+```
+
+8. **Hermes Agent** (`~/.hermes/mcp.json`):
+```json
+{
+  "mcpServers": {
+    "upwork": {
+      "command": "/usr/local/bin/upwork-mcp-rs",
+      "args": ["serve", "--stdio"]
     }
   }
 }

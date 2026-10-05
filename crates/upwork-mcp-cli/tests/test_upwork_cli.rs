@@ -128,6 +128,7 @@ fn test_cli_parsing() {
         Commands::Config(cfg) => {
             assert_eq!(cfg.client.as_deref(), Some("claude"));
             assert!(!cfg.all);
+            assert!(!cfg.install);
         }
         _ => panic!("Expected Config command"),
     }
@@ -138,9 +139,83 @@ fn test_cli_parsing() {
         Commands::Config(cfg) => {
             assert!(cfg.all);
             assert_eq!(cfg.client, None);
+            assert!(!cfg.install);
         }
         _ => panic!("Expected Config command"),
     }
+
+    // Test config subcommand with --install flag
+    let args = vec![
+        "upwork-mcp-rs",
+        "config",
+        "--client",
+        "antigravity",
+        "--install",
+    ];
+    let cli = Cli::try_parse_from(args).expect("Failed to parse config --install args");
+    match cli.command {
+        Commands::Config(cfg) => {
+            assert_eq!(cfg.client.as_deref(), Some("antigravity"));
+            assert!(cfg.install);
+        }
+        _ => panic!("Expected Config command"),
+    }
+}
+
+#[test]
+fn test_client_type_parsing() {
+    // Existing clients
+    assert_eq!(ClientType::parse_client("claude"), Some(ClientType::Claude));
+    assert_eq!(
+        ClientType::parse_client("claude-desktop"),
+        Some(ClientType::Claude)
+    );
+    assert_eq!(ClientType::parse_client("cursor"), Some(ClientType::Cursor));
+    assert_eq!(ClientType::parse_client("zed"), Some(ClientType::Zed));
+    assert_eq!(ClientType::parse_client("cline"), Some(ClientType::Cline));
+
+    // Codex CLI aliases
+    assert_eq!(ClientType::parse_client("codex"), Some(ClientType::Codex));
+    assert_eq!(
+        ClientType::parse_client("codex-cli"),
+        Some(ClientType::Codex)
+    );
+    assert_eq!(
+        ClientType::parse_client("openai-codex"),
+        Some(ClientType::Codex)
+    );
+
+    // Antigravity CLI aliases
+    assert_eq!(
+        ClientType::parse_client("antigravity"),
+        Some(ClientType::Antigravity)
+    );
+    assert_eq!(
+        ClientType::parse_client("antigravity-cli"),
+        Some(ClientType::Antigravity)
+    );
+    assert_eq!(
+        ClientType::parse_client("gemini"),
+        Some(ClientType::Antigravity)
+    );
+
+    // Pi Agent aliases
+    assert_eq!(ClientType::parse_client("pi"), Some(ClientType::Pi));
+    assert_eq!(ClientType::parse_client("pi-agent"), Some(ClientType::Pi));
+
+    // Hermes Agent aliases
+    assert_eq!(ClientType::parse_client("hermes"), Some(ClientType::Hermes));
+    assert_eq!(
+        ClientType::parse_client("hermes-agent"),
+        Some(ClientType::Hermes)
+    );
+    assert_eq!(
+        ClientType::parse_client("cognisynth"),
+        Some(ClientType::Hermes)
+    );
+
+    // Unknown client
+    assert_eq!(ClientType::parse_client("unknown"), None);
 }
 
 #[test]
@@ -192,12 +267,191 @@ fn test_config_generation() {
     );
     assert_eq!(cline_cfg["mcpServers"]["upwork"]["disabled"], false);
 
-    // All configurations combined
+    // Codex CLI configuration
+    let codex_cfg = generate_client_config(ClientType::Codex, &dummy_path);
+    assert_eq!(
+        codex_cfg["mcpServers"]["upwork"]["command"],
+        "/usr/local/bin/upwork-mcp-rs"
+    );
+    assert_eq!(
+        codex_cfg["mcpServers"]["upwork"]["args"],
+        serde_json::json!(["serve", "--stdio"])
+    );
+
+    // Antigravity CLI configuration
+    let antigravity_cfg = generate_client_config(ClientType::Antigravity, &dummy_path);
+    assert_eq!(
+        antigravity_cfg["mcpServers"]["upwork"]["command"],
+        "/usr/local/bin/upwork-mcp-rs"
+    );
+    assert_eq!(
+        antigravity_cfg["mcpServers"]["upwork"]["args"],
+        serde_json::json!(["serve", "--stdio"])
+    );
+
+    // Pi Agent configuration
+    let pi_cfg = generate_client_config(ClientType::Pi, &dummy_path);
+    assert_eq!(
+        pi_cfg["mcpServers"]["upwork"]["command"],
+        "/usr/local/bin/upwork-mcp-rs"
+    );
+    assert_eq!(
+        pi_cfg["mcpServers"]["upwork"]["args"],
+        serde_json::json!(["serve", "--stdio"])
+    );
+
+    // Hermes Agent configuration
+    let hermes_cfg = generate_client_config(ClientType::Hermes, &dummy_path);
+    assert_eq!(
+        hermes_cfg["mcpServers"]["upwork"]["command"],
+        "/usr/local/bin/upwork-mcp-rs"
+    );
+    assert_eq!(
+        hermes_cfg["mcpServers"]["upwork"]["args"],
+        serde_json::json!(["serve", "--stdio"])
+    );
+
+    // All configurations combined (all 8 clients)
     let all_configs = generate_all_configs(&dummy_path);
     assert!(all_configs.get("claude").is_some());
     assert!(all_configs.get("cursor").is_some());
     assert!(all_configs.get("zed").is_some());
     assert!(all_configs.get("cline").is_some());
+    assert!(all_configs.get("codex").is_some());
+    assert!(all_configs.get("antigravity").is_some());
+    assert!(all_configs.get("pi").is_some());
+    assert!(all_configs.get("hermes").is_some());
+}
+
+#[test]
+fn test_target_config_path() {
+    use upwork_mcp_cli::config::target_config_path;
+
+    let home = PathBuf::from("/home/testuser");
+
+    assert_eq!(
+        target_config_path(ClientType::Claude, &home),
+        home.join(".config/Claude/claude_desktop_config.json")
+    );
+    assert_eq!(
+        target_config_path(ClientType::Cursor, &home),
+        home.join(".cursor/mcp.json")
+    );
+    assert_eq!(
+        target_config_path(ClientType::Zed, &home),
+        home.join(".config/zed/settings.json")
+    );
+    assert_eq!(
+        target_config_path(ClientType::Cline, &home),
+        home.join(".config/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json")
+    );
+    assert_eq!(
+        target_config_path(ClientType::Codex, &home),
+        home.join(".codex/config.json")
+    );
+    assert_eq!(
+        target_config_path(ClientType::Antigravity, &home),
+        home.join(".gemini/config/mcp_config.json")
+    );
+    assert_eq!(
+        target_config_path(ClientType::Pi, &home),
+        home.join(".pi/agent/mcp.json")
+    );
+    assert_eq!(
+        target_config_path(ClientType::Hermes, &home),
+        home.join(".hermes/mcp.json")
+    );
+}
+
+#[test]
+fn test_install_client_config_creates_new_and_merges() {
+    use upwork_mcp_cli::config::install_client_config;
+
+    let temp_dir = tempfile::tempdir().expect("Failed to create tempdir");
+    let home = temp_dir.path().to_path_buf();
+    let bin_path = PathBuf::from("/usr/local/bin/upwork-mcp-rs");
+
+    // 1. Install to Antigravity when file does not exist
+    let installed_path = install_client_config(ClientType::Antigravity, &home, &bin_path)
+        .expect("Should install cleanly into empty home");
+    assert!(installed_path.exists());
+
+    let content: serde_json::Value = serde_json::from_str(
+        &std::fs::read_to_string(&installed_path).expect("Read installed config"),
+    )
+    .expect("Parse JSON");
+    assert_eq!(
+        content["mcpServers"]["upwork"]["command"],
+        "/usr/local/bin/upwork-mcp-rs"
+    );
+
+    // 2. Merge into existing JSON with other pre-existing servers
+    let existing_json = serde_json::json!({
+        "mcpServers": {
+            "other-server": {
+                "command": "node",
+                "args": ["server.js"]
+            }
+        },
+        "customSetting": true
+    });
+    let pi_path = home.join(".pi/agent/mcp.json");
+    std::fs::create_dir_all(pi_path.parent().unwrap()).unwrap();
+    std::fs::write(
+        &pi_path,
+        serde_json::to_string_pretty(&existing_json).unwrap(),
+    )
+    .unwrap();
+
+    let installed_pi_path = install_client_config(ClientType::Pi, &home, &bin_path)
+        .expect("Should merge cleanly into existing config");
+    assert_eq!(installed_pi_path, pi_path);
+
+    let merged_content: serde_json::Value = serde_json::from_str(
+        &std::fs::read_to_string(&installed_pi_path).expect("Read merged config"),
+    )
+    .expect("Parse merged JSON");
+    assert_eq!(
+        merged_content["mcpServers"]["other-server"]["command"],
+        "node"
+    );
+    assert_eq!(
+        merged_content["mcpServers"]["upwork"]["command"],
+        "/usr/local/bin/upwork-mcp-rs"
+    );
+    assert_eq!(merged_content["customSetting"], true);
+
+    // 3. Merge into Zed's context_servers
+    let zed_existing = serde_json::json!({
+        "context_servers": {
+            "other_zed": {
+                "command": {
+                    "path": "node",
+                    "args": []
+                }
+            }
+        }
+    });
+    let zed_path = home.join(".config/zed/settings.json");
+    std::fs::create_dir_all(zed_path.parent().unwrap()).unwrap();
+    std::fs::write(
+        &zed_path,
+        serde_json::to_string_pretty(&zed_existing).unwrap(),
+    )
+    .unwrap();
+
+    install_client_config(ClientType::Zed, &home, &bin_path).expect("Merge into Zed");
+    let zed_merged: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&zed_path).expect("Read zed config"))
+            .expect("Parse zed JSON");
+    assert_eq!(
+        zed_merged["context_servers"]["other_zed"]["command"]["path"],
+        "node"
+    );
+    assert_eq!(
+        zed_merged["context_servers"]["upwork"]["command"]["path"],
+        "/usr/local/bin/upwork-mcp-rs"
+    );
 }
 
 #[test]

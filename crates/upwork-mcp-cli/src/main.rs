@@ -137,7 +137,61 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 std::env::current_exe().unwrap_or_else(|_| PathBuf::from("upwork-mcp-rs"))
             });
 
-            if args.all {
+            if args.install {
+                let home_dir = std::env::var_os("HOME")
+                    .map(PathBuf::from)
+                    .unwrap_or_else(|| PathBuf::from("."));
+
+                if let Some(client_str) = &args.client {
+                    if let Some(client_type) = ClientType::parse_client(client_str) {
+                        let installed_path = upwork_mcp_cli::config::install_client_config(
+                            client_type,
+                            &home_dir,
+                            &bin_path,
+                        )?;
+                        println!(
+                            "{} Successfully installed Upwork MCP configuration to: {}",
+                            "✔".green().bold(),
+                            installed_path.display().to_string().cyan()
+                        );
+                    } else {
+                        eprintln!(
+                            "{} Unknown client '{}'. Supported clients: claude, cursor, zed, cline, codex, antigravity, pi, hermes",
+                            "✖".red().bold(),
+                            client_str
+                        );
+                        std::process::exit(1);
+                    }
+                } else if args.all {
+                    let all_clients = [
+                        ClientType::Claude,
+                        ClientType::Cursor,
+                        ClientType::Zed,
+                        ClientType::Cline,
+                        ClientType::Codex,
+                        ClientType::Antigravity,
+                        ClientType::Pi,
+                        ClientType::Hermes,
+                    ];
+                    for client in all_clients {
+                        let path = upwork_mcp_cli::config::install_client_config(
+                            client, &home_dir, &bin_path,
+                        )?;
+                        println!(
+                            "{} Installed config for {:?} to: {}",
+                            "✔".green().bold(),
+                            client,
+                            path.display().to_string().cyan()
+                        );
+                    }
+                } else {
+                    eprintln!(
+                        "{} Please specify --client <NAME> or --all when using --install.",
+                        "✖".red().bold()
+                    );
+                    std::process::exit(1);
+                }
+            } else if args.all {
                 let all_json = generate_all_configs(&bin_path);
                 println!("{}", serde_json::to_string_pretty(&all_json)?);
             } else if let Some(client_str) = &args.client {
@@ -146,7 +200,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("{}", serde_json::to_string_pretty(&client_json)?);
                 } else {
                     eprintln!(
-                        "{} Unknown client '{}'. Supported clients: claude, cursor, zed, cline",
+                        "{} Unknown client '{}'. Supported clients: claude, cursor, zed, cline, codex, antigravity, pi, hermes",
                         "✖".red().bold(),
                         client_str
                     );
