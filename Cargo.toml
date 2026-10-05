@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "crates/upwork-mcp-core",
+    "crates/upwork-mcp-server",
 ]
 
 [workspace.package]
