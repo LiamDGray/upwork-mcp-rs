@@ -64,7 +64,7 @@ static SYNC_DEMAND_REGEX: LazyLock<Regex> = LazyLock::new(|| {
 });
 
 static TRACKER_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)\b(desktop\s+app|upwork\s+tracker|keystroke\s+(logging|monitoring)|screen\s+(capture|monitoring|recording)|random\s+screen|time\s+tracker\s+with\s+screen|webcam\s+track(ing|er)|mouse\s+movement)\b").unwrap()
+    Regex::new(r"(?i)\b(desktop\s+app|upwork\s+tracker|tracker\s+app|keystroke\s+(logging|monitoring)|screen\s+(capture|monitoring|recording)|random\s+screen|time\s+tracker\s+with\s+screen|webcam\s+track(ing|er)|mouse\s+movement)\b").unwrap()
 });
 
 static HIGH_LEVERAGE_PATTERNS: LazyLock<Vec<(&'static str, Regex)>> = LazyLock::new(|| {

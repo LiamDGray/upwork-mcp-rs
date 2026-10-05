@@ -43,6 +43,20 @@ pub fn create_router(dispatcher: Arc<McpDispatcher>) -> Router {
         .with_state(state)
 }
 
+/// Runs the HTTP/SSE transport server on a local port.
+pub async fn run_http_server(
+    dispatcher: Arc<McpDispatcher>,
+    port: u16,
+) -> Result<(), std::io::Error> {
+    let router = create_router(dispatcher);
+    let addr = std::net::SocketAddr::from(([127, 0, 0, 1], port));
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+    axum::serve(listener, router)
+        .await
+        .map_err(std::io::Error::other)?;
+    Ok(())
+}
+
 fn is_valid_localhost_host_or_origin(val: &str) -> bool {
     let without_scheme = val
         .trim_start_matches("http://")
